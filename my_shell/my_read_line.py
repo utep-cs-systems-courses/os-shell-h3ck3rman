@@ -1,5 +1,6 @@
 import os
 
+#global variables needed for reading
 nxt = 0
 limit = 0
 
@@ -11,7 +12,7 @@ def get_char():
         nxt = 0
         limit = os.read(0,100)
 
-        if limit == 0:
+        if limit == 0: #if nothing left to read, EOF
             return 'EOF'
 
     if nxt < len(limit) -1:
@@ -30,7 +31,7 @@ def my_read_line():
     string = ''
     char = get_char()
 
-    while(char != '' and char != 'EOF'):
+    while(char != '' and char != 'EOF'): #keep adding chars to string until none left
         string += char
         char = get_char()
 
