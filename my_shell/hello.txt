@@ -1,0 +1,9 @@
+hello.txt
+my_read_line.py
+my_shell.py
+__pycache__
+testShell.sh
+ould better
+understand how input and output redirection works...
+
+Now let's hope it works
