@@ -4,6 +4,8 @@ import re
 from my_read_line import my_read_line
 
 def out_redir(args):
+    if '|' in args:
+        args.remove('|')
     os.close(1)
     os.open(args[args.index('>') + 1], os.O_WRONLY | os.O_CREAT)
     os.set_inheritable(1,True)
@@ -19,6 +21,8 @@ def out_redir(args):
     sys.exit(1)
 
 def in_redir(args):
+    if '|' in args:
+        args.remove('|')
     os.close(0)
     os.open(args[args.index('<') + 1], os.O_RDONLY)
     os.set_inheritable(1,True)
@@ -33,6 +37,47 @@ def in_redir(args):
     os.write(2, ("Command not found\n").encode())
     sys.exit(1)
 
+def pipe(args):
+    pid = os.getpid()
+    import fileinput
+    pr, pw = os.pipe()
+
+    for f in (pr,pw):
+        os.set_inheritable(f, True)
+    print("pipe fds: pr=%d, pw=%d" % (pr, pw))
+    print("About to fork (pid=%d)" % pid)
+
+    rc = os.fork()
+
+    if rc < 0:
+        print("fork failed, returning %d\n" % rc, file = sys.stderr)
+        sys.exit(1)
+
+    elif rc == 0:
+        print("Child: My pid==%d. Parent's pid=%d" % (os.getpid(), pid), file=sys.stderr)
+        os.close(1)       #output redirect
+        os.dup(pw)
+        for fd in (pw, pr):
+            os.close(fd)
+        print("hello from child")
+
+    else:
+        print("Parent: My pid==%d. Child's pid=%d" % (os.getpid(), rc), file=sys.stderr)
+        os.close(0)
+        os.dup(pr)
+        for fd in (pw, pr):
+            os.close(fd)
+        for line in fileinput.input():
+            print("From child: <%s>" % line)
+    print("Args before redirect: %s" % args)
+
+    if '>' in args:
+        out_redir(args)
+
+    if '<' in args:
+        in_redir(args)
+
+    
 while(1):
     os.write(1, "\n$ ".encode())
     
@@ -66,6 +111,8 @@ while(1):
             sys.exit(1)
 
         elif rc == 0:
+            if '|' in args:
+                pipe(args)
             if '>' in args:
                 out_redir(args)
             elif '<' in args:
