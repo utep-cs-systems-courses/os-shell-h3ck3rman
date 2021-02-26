@@ -1,8 +1,8 @@
 import os
 
-#global variables needed for reading
 nxt = 0
 limit = 0
+
 
 def get_char():
     global nxt
